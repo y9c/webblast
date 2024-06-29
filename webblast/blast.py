@@ -98,7 +98,7 @@ def read_ncbi_api_key() -> str:
     "--program",
     "-p",
     type=click.Choice(list(BLAST_PROGRAMS.keys()), case_sensitive=False),
-    default="blastn",
+    default="megablast",
     show_default=True,
     help="BLAST program to use.",
 )
