@@ -69,6 +69,30 @@ def write_cache(input_hash, data):
         file.write(data)
 
 
+def read_ncbi_api_key() -> str:
+    # Check current directory first
+    current_dir = os.getcwd()
+    current_file = os.path.join(current_dir, ".ncbi_api")
+
+    if os.path.exists(current_file):
+        file_path = current_file
+    else:
+        # Check home directory
+        home_dir = os.path.expanduser("~")
+        home_file = os.path.join(home_dir, ".ncbi_api")
+
+        if os.path.exists(home_file):
+            file_path = home_file
+        else:
+            return ""  # File not found in both locations
+
+    # Read the key from the file
+    with open(file_path, "r") as f:
+        api_key = f.readline().strip()
+
+    return f"&api_key={api_key}"
+
+
 @click.command()
 @click.option(
     "--program",
@@ -132,6 +156,7 @@ def main(program, database, cache, color, query_files):
                 return
 
     # If no cache, proceed with BLAST request
+    api_str = read_ncbi_api_key()
 
     if program == "megablast":
         args = f"CMD=Put&PROGRAM=blastn&MEGABLAST=on&DATABASE={database}&QUERY={encoded_query}"
@@ -141,7 +166,7 @@ def main(program, database, cache, color, query_files):
         args = f"CMD=Put&PROGRAM={program}&DATABASE={database}&QUERY={encoded_query}"
     url = "https://blast.ncbi.nlm.nih.gov/blast/Blast.cgi"
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    response = requests.post(url, headers=headers, data=args)
+    response = requests.post(url, headers=headers, data=args + api_str)
 
     if response.status_code != 200:
         click.secho("Failed to submit BLAST request.", fg="red")
@@ -212,7 +237,7 @@ def main(program, database, cache, color, query_files):
                     click.secho("No hits found.", fg="red")
                     sys.exit(2)
     # Retrieve and display results
-    req = requests.get(f"{url}?CMD=Get&FORMAT_TYPE=Text&RID={rid}")
+    req = requests.get(f"{url}?CMD=Get&FORMAT_TYPE=Text&RID={rid}" + api_str)
     result_text = req.text
     if cache:
         write_cache(input_hash, result_text)
