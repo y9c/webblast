@@ -93,7 +93,24 @@ def read_ncbi_api_key() -> str:
     return f"&api_key={api_key}"
 
 
-@click.command()
+def print_results(text: str, rid: str, console: Console | None = None):
+    """Print BLAST results with colorized output."""
+    if console is not None:
+        with console.pager(styles=True):
+            console.print(text)
+        console.print(
+            f"View results at: https://blast.ncbi.nlm.nih.gov/blast/Blast.cgi?CMD=Get&RID={rid}"
+        )
+    else:
+        print(text)
+        print(
+            f"View results at: https://blast.ncbi.nlm.nih.gov/blast/Blast.cgi?CMD=Get&RID={rid}"
+        )
+
+
+@click.command(
+    context_settings=dict(help_option_names=["-h", "--help"]),
+)
 @click.option(
     "--program",
     "-p",
@@ -146,14 +163,15 @@ def main(program, database, cache, color, query_files):
 
     if cache_file:
         console.print(f"Using cached results from {cache_file}", style="bold green")
-        with open(cache_file, "r") as file:
-            if not color:
-                for line in file:
-                    print(line, end="")
-                return
-            with console.pager(styles=True):
-                console.print(file.read())
-                return
+
+        result_text = open(cache_file, "r").read()
+        # parse rd from cache file
+        for line in result_text.splitlines():
+            if line.startswith("RID: "):
+                rid = line.split(":")[1].strip()
+                break
+        print_results(result_text, rid, console if color else None)
+        return
 
     # If no cache, proceed with BLAST request
     api_str = read_ncbi_api_key()
@@ -241,12 +259,7 @@ def main(program, database, cache, color, query_files):
     result_text = req.text
     if cache:
         write_cache(input_hash, result_text)
-
-    if not color:
-        print(result_text)
-    else:
-        with console.pager(styles=True):
-            console.print(result_text)
+    print_results(result_text, rid, console if color else None)
 
 
 if __name__ == "__main__":
