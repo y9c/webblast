@@ -87,10 +87,16 @@ def write_cache(input_hash, data):
     help="Database to search against.",
 )
 @click.option(
+    "--color/--no-color",
+    default=True,
+    show_default=True,
+    help="Enable or disable colorized output.",
+)
+@click.option(
     "--cache/--no-cache", default=True, show_default=True, help="Enable caching."
 )
 @click.argument("query_files", type=click.Path(exists=True), required=False, nargs=-1)
-def main(program, database, cache, query_files):
+def main(program, database, cache, color, query_files):
     console = Console()
 
     # Handle query input
@@ -117,9 +123,13 @@ def main(program, database, cache, query_files):
     if cache_file:
         console.print(f"Using cached results from {cache_file}", style="bold green")
         with open(cache_file, "r") as file:
+            if not color:
+                for line in file:
+                    print(line, end="")
+                return
             with console.pager(styles=True):
                 console.print(file.read())
-        return
+                return
 
     # If no cache, proceed with BLAST request
 
@@ -206,8 +216,12 @@ def main(program, database, cache, query_files):
     result_text = req.text
     if cache:
         write_cache(input_hash, result_text)
-    with console.pager(styles=True):
-        console.print(result_text)
+
+    if not color:
+        print(result_text)
+    else:
+        with console.pager(styles=True):
+            console.print(result_text)
 
 
 if __name__ == "__main__":
