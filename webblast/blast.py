@@ -1,8 +1,11 @@
-#!/usr/bin/env python3
-"""
-This script performs a web BLAST search using NCBI's web service, utilizing rich_click for argument parsing,
-and implements caching by hashing input queries.
-"""
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# Copyright © 2024 Ye Chang yech1990@gmail.com
+# Distributed under terms of the GNU license.
+#
+# Created: 2024-06-29 01:08
+
 
 import os
 import sys
@@ -120,15 +123,12 @@ def main(program, database, cache, query_files):
 
     # If no cache, proceed with BLAST request
 
-    # To enable megablast, use PROGRAM=blastn&MEGABLAST=on.
-    # To enable RPS-BLAST, use PROGRAM=blastp&SERVICE=rpsblast.
     if program == "megablast":
         args = f"CMD=Put&PROGRAM=blastn&MEGABLAST=on&DATABASE={database}&QUERY={encoded_query}"
     elif program == "rpsblast":
         args = f"CMD=Put&PROGRAM=blastp&SERVICE=rpsblast&DATABASE={database}&QUERY={encoded_query}"
     else:
         args = f"CMD=Put&PROGRAM={program}&DATABASE={database}&QUERY={encoded_query}"
-
     url = "https://blast.ncbi.nlm.nih.gov/blast/Blast.cgi"
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
     response = requests.post(url, headers=headers, data=args)
@@ -150,8 +150,6 @@ def main(program, database, cache, query_files):
         click.secho("Failed to retrieve RID or RTOE from BLAST response.", fg="red")
         sys.exit(1)
     else:
-        # console.print(f"RID: {rid}", f"RTOE: {rtoe}s")
-        # id is bold
         console.print(f"RID: [bold]{rid}[/bold]", f"RTOE: [bold]{rtoe}[/bold]s")
 
     # Wait for search to complete with a dynamic progress bar
