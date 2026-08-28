@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "webblast"
-version = "0.0.8"
+version = "0.0.9"
 description = "Fast NCBI BLAST searches via the interactive (website) queue — compact JSON results, adaptive polling and caching."
 authors = ["Chang Ye <yech1990@gmail.com>"]
 readme = "README.md"

@@ -76,34 +76,63 @@ def iter_records(path: str) -> Iterator[Tuple[str, str]]:
         yield from iter_fasta(path)
 
 
+def _bare_sequence(text: str) -> str:
+    """Collapse arbitrary text into a bare sequence (strip whitespace/headers)."""
+    return "".join(ch for ch in text if not ch.isspace())
+
+
+def _parse_fasta_text(text: str, limit: Optional[int]) -> List[Tuple[str, str]]:
+    records: List[Tuple[str, str]] = []
+    name, seq = None, []
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        if line.startswith(">"):
+            if name is not None:
+                records.append((name, "".join(seq)))
+                if limit and len(records) >= limit:
+                    return records
+            name = line[1:].split(None, 1)[0].strip() if line[1:].strip() else "seq"
+            seq = []
+        else:
+            seq.append(line)
+    if name is not None:
+        records.append((name, "".join(seq)))
+    return records
+
+
 def read_records(paths: List[str], limit: Optional[int] = None) -> List[Tuple[str, str]]:
-    """Read ``(name, sequence)`` records from files (or FASTA from stdin)."""
+    """Read ``(name, sequence)`` records — supports FASTA/FASTQ/BAM and bare sequences.
+
+    * stdin or files: FASTA (``>``-prefixed), FASTQ, BAM/SAM (via pysam), or a bare
+      sequence (no header) which is treated as a single record named ``seq``.
+    """
     records: List[Tuple[str, str]] = []
     if not paths:
         import sys
 
-        name, seq = None, []
-        for raw in sys.stdin:
-            line = raw.strip()
-            if not line:
-                continue
-            if line.startswith(">"):
-                if name is not None:
-                    records.append((name, "".join(seq)))
-                    if limit and len(records) >= limit:
-                        break
-                name = line[1:].split(None, 1)[0].strip() if line[1:].strip() else "seq"
-                seq = []
-            else:
-                seq.append(line)
-        if name is not None:
-            records.append((name, "".join(seq)))
+        text = sys.stdin.read()
+        lines = [l.strip() for l in text.splitlines() if l.strip()]
+        if any(l.startswith(">") for l in lines):
+            records = _parse_fasta_text(text, limit)
+        else:
+            seq = _bare_sequence(text)
+            if seq:
+                records = [("seq", seq)]
     else:
         for path in paths:
-            for name, seq in iter_records(path):
-                records.append((name, seq))
-                if limit and len(records) >= limit:
-                    break
+            got = list(iter_records(path))
+            if got:
+                records.extend(got)
+            else:
+                # fallback: maybe a plain (header-less) sequence file
+                with open_text(path) as fh:
+                    seq = _bare_sequence(fh.read())
+                if seq:
+                    records.append(("seq", seq))
+            if limit and len(records) >= limit:
+                break
     if not records:
         raise ValueError("No sequences found in input.")
     return records
