@@ -11,7 +11,7 @@ from .client import BlastClient, Submission, BASE_URL, PROGRAMS, DATABASES
 from .parse import BlastReport, Hit, HSP, QueryResult, parse_blast_json
 from .utils import chunk_records, iter_records, join_records, read_records
 
-__version__ = "0.0.9"
+__version__ = "0.0.10"
 
 __all__ = [
     "BlastClient",

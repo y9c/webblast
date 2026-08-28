@@ -137,23 +137,10 @@ class BlastClient:
         self.cfg = PROGRAMS[self.program]
         self._page = self.cfg["page"]
         self.session = requests.Session()
+        # A browser User-Agent + the web parameter set is enough to land on the
+        # fast interactive queue — no need to pre-fetch the (heavy) search form,
+        # which costs ~2s and doesn't help.
         self.session.headers.update({"User-Agent": BROWSER_UA})
-        self._init_session()
-
-    # ------------------------------------------------------------------ #
-    # session / transport
-    # ------------------------------------------------------------------ #
-    def _init_session(self) -> None:
-        """Prime the session so NCBI assigns us an ``ncbi_sid`` cookie."""
-        try:
-            self.session.get(
-                BASE_URL,
-                params={"PAGE": self._page, "PROGRAM": self.cfg["program"]},
-                timeout=self.timeout,
-            )
-        except requests.RequestException:
-            # A session isn't strictly required; submission will still work.
-            pass
 
     def _build_params(self, query: str, format_type: str, **extra) -> dict:
         params = {

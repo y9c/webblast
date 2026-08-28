@@ -113,8 +113,8 @@ def read_records(paths: List[str], limit: Optional[int] = None) -> List[Tuple[st
         import sys
 
         text = sys.stdin.read()
-        lines = [l.strip() for l in text.splitlines() if l.strip()]
-        if any(l.startswith(">") for l in lines):
+        lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+        if any(ln.startswith(">") for ln in lines):
             records = _parse_fasta_text(text, limit)
         else:
             seq = _bare_sequence(text)
