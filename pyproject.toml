@@ -1,19 +1,46 @@
 [tool.poetry]
 name = "webblast"
-version = "0.0.6"
-description = ""
+version = "0.0.7"
+description = "Fast NCBI BLAST searches via the interactive (website) queue — compact JSON results, adaptive polling and caching."
 authors = ["Chang Ye <yech1990@gmail.com>"]
 readme = "README.md"
+license = "MIT"
+repository = "https://github.com/y9c/webblast"
+keywords = ["blast", "ncbi", "bioinformatics", "sequence-alignment", "homology", "species"]
+# Ship the compresed species -> Chinese dictionary as package data.
+include = ["webblast/data/*.xz"]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
 
 [tool.poetry.dependencies]
-python = ">=3.8"
+python = ">=3.9"
 requests = "^2.32.3"
 rich-click = "^1.8.3"
-pysam = "^0.22.1"
+rich = ">=13.0"
+# pysam is only needed for BAM/SAM input; keep it optional.
+pysam = { version = "^0.22.1", optional = true }
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=7.0"
+
+[tool.poetry.extras]
+bam = ["pysam"]
 
 [tool.poetry.scripts]
-webblast = 'webblast.blast:main'
+webblast = 'webblast.cli:main'
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
