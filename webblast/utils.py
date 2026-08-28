@@ -76,16 +76,12 @@ def iter_records(path: str) -> Iterator[Tuple[str, str]]:
         yield from iter_fasta(path)
 
 
-def build_query(paths: List[str], limit: Optional[int] = None) -> str:
-    """Read sequence files and build a single multi-record FASTA query string.
-
-    If no paths are given (or they are empty), read FASTA from stdin.
-    """
+def read_records(paths: List[str], limit: Optional[int] = None) -> List[Tuple[str, str]]:
+    """Read ``(name, sequence)`` records from files (or FASTA from stdin)."""
     records: List[Tuple[str, str]] = []
     if not paths:
         import sys
 
-        # parse a paste-in FASTA from stdin
         name, seq = None, []
         for raw in sys.stdin:
             line = raw.strip()
@@ -108,30 +104,28 @@ def build_query(paths: List[str], limit: Optional[int] = None) -> str:
                 records.append((name, seq))
                 if limit and len(records) >= limit:
                     break
-
     if not records:
         raise ValueError("No sequences found in input.")
+    return records
 
+
+def join_records(records: List[Tuple[str, str]]) -> str:
+    """Build a multi-record FASTA string from ``(name, sequence)`` pairs."""
     return "\n".join(f">{name}\n{seq}" for name, seq in records)
 
 
-# ---------------------------------------------------------------------- #
-# Backwards-compatible helper (kept from the original package)
-# ---------------------------------------------------------------------- #
-def read_file(file_path, record_limit=None):
-    """Return FASTA records as ``["name\\nseq", ...]`` strings.
-
-    Retained for backward compatibility; prefer :func:`build_query`.
-    """
-    if file_path == "-":
-        import sys
-        paths = [sys.stdin]
-        # not supported cleanly here; read as text
-        return [f"stdin\n{''.join(l for l in sys.stdin if not l.startswith('>'))}"]
-
-    out = []
-    for name, seq in iter_records(file_path):
-        out.append(f">{name}\n{seq}")
-        if record_limit and len(out) >= record_limit:
-            break
+def chunk_records(records: List[Tuple[str, str]], n: int) -> List[List[Tuple[str, str]]]:
+    """Split records into at most ``n`` roughly equal chunks."""
+    n = max(1, n)
+    if n == 1 or len(records) <= n:
+        return [records]
+    k, rem = divmod(len(records), n)
+    out, idx = [], 0
+    for i in range(n):
+        size = k + (1 if i < rem else 0)
+        out.append(records[idx : idx + size])
+        idx += size
     return out
+
+
+

@@ -84,10 +84,6 @@ class BlastReport:
         return sum(len(q.hits) for q in self.queries)
 
 
-def _strip_html(s: Optional[str]) -> Optional[str]:
-    return s
-
-
 def _first_hit_desc(hit: dict) -> dict:
     """Return the first description entry as a normalised dict."""
     descs = hit.get("description") or []

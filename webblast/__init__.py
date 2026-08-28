@@ -9,9 +9,9 @@ format into clean records.
 
 from .client import BlastClient, Submission, BASE_URL, PROGRAMS, DATABASES
 from .parse import BlastReport, Hit, HSP, QueryResult, parse_blast_json
-from .utils import build_query, iter_records
+from .utils import chunk_records, iter_records, join_records, read_records
 
-__version__ = "0.1.0"
+__version__ = "0.0.7"
 
 __all__ = [
     "BlastClient",
@@ -21,7 +21,9 @@ __all__ = [
     "Hit",
     "HSP",
     "parse_blast_json",
-    "build_query",
+    "chunk_records",
+    "join_records",
+    "read_records",
     "iter_records",
     "BASE_URL",
     "PROGRAMS",

@@ -53,7 +53,7 @@ def main() -> None:
     args = ap.parse_args()
 
     d = load_dict()
-    names = [l.strip() for l in open(args.input, encoding="utf-8") if l.strip()]
+    names = [n.strip() for n in open(args.input, encoding="utf-8") if n.strip()]
     missing = [n for n in dict.fromkeys(names) if n not in d]
     print(f"bundled dict: {len(d):,} entries ; requested {len(names):,} ; missing {len(missing):,}")
 

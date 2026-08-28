@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import re
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Callable, Optional
 
 import requests
@@ -124,11 +124,11 @@ class BlastClient:
     api_key: str = ""
     timeout: float = 60.0
     # poll cadence (seconds) & backoff. NCBI's RTOE is a very conservative
-    # over-estimate (fresh searches finish in ~3.4s), so we poll quickly from the
-    # start to catch the result at the NCBI floor, then back off politely.
-    poll_interval: float = 1.5
-    max_poll_interval: float = 8.0
-    backoff: float = 1.35
+    # over-estimate; fresh searches actually finish in ~2.4s, so we poll tightly
+    # (1s) at first to catch the result at the floor, then back off politely.
+    poll_interval: float = 1.0
+    max_poll_interval: float = 6.0
+    backoff: float = 1.2
     last_response: str = ""
 
     def __post_init__(self):
